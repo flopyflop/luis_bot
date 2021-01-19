@@ -51,6 +51,8 @@ class EditBookingDialog(CancelAndHelpDialog):
             edit_booking_details = step_context.options
 
             if not edit_booking_details.user_id == 0:
+                message_text = "Please enter your user ID"
+
                 return await step_context.begin_dialog(
                     UserIDResolverDialog.__name__, edit_booking_details.user_id
                 )
@@ -103,15 +105,16 @@ class EditBookingDialog(CancelAndHelpDialog):
     async def capacity_step(
         self, step_context: WaterfallStepContext
     ) -> DialogTurnResult:
-        booking_details = step_context.options
+        edit_booking_details = step_context.options
         # Capture the results of the previous step
-        booking_details.travel_date = step_context.result
-        if not booking_details.capacity <= 0:
-            message_text = "How many seats would you like to book?"
+        edit_booking_details.travel_date = step_context.result
+        if not edit_booking_details.capacity <= 0:
+            edit_booking_details.capacity = None
             return await step_context.begin_dialog(
-                CapcacityResolverDialog.__name__, booking_details.capacity
+                CapcacityResolverDialog.__name__, edit_booking_details.capacity
             )
-        return await step_context.next(booking_details.capacity)
+        return await step_context.next(edit_booking_details.capacity)
+
 
     async def confirm_step(
                 self, step_context: WaterfallStepContext

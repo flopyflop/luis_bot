@@ -7,11 +7,13 @@ from botbuilder.core import IntentScore, TopIntent, TurnContext
 
 from booking_details import BookingDetails
 from cancel_booking_details import CancelBookingDetails
+from edit_booking_details import EditBookingDetails
 
 
 class Intent(Enum):
     BOOK_FLIGHT = "BookFlight"
     CANCEL_BOOKING = "CancelBooking"
+    EDIT_BOOKING = "EditBooking"
     CANCEL = "Cancel"
     GET_WEATHER = "GetWeather"
     NONE_INTENT = "NoneIntent"
@@ -114,7 +116,7 @@ class LuisHelper:
                     result.capacity = capacity
 
                 else:
-                    result.capacity = None
+                    result.capacity = -1
 
             if intent == Intent.CANCEL_BOOKING.value:
                 result = CancelBookingDetails()
@@ -133,18 +135,6 @@ class LuisHelper:
                             to_entities[0]["text"].capitalize()
                         )
 
-                from_entities = recognizer_result.entities.get("$instance", {}).get(
-                    "From", []
-                )
-                if len(from_entities) > 0:
-                    if recognizer_result.entities.get("From", [{"$instance": {}}])[0][
-                        "$instance"
-                    ]:
-                        result.origin = from_entities[0]["text"].capitalize()
-                    else:
-                        result.unsupported_airports.append(
-                            from_entities[0]["text"].capitalize()
-                        )
 
                 # This value will be a TIMEX. And we are only interested in a Date so grab the first result and drop
                 # the Time part. TIMEX is a format that represents DateTime expressions that include some ambiguity.
@@ -169,6 +159,60 @@ class LuisHelper:
 
                 else:
                     result.user_id = None
+
+            if intent == Intent.EDIT_BOOKING.value:
+                result = EditBookingDetails()
+
+                # We need to get the result from the LUIS JSON which at every level returns an array.
+                to_entities = recognizer_result.entities.get("$instance", {}).get(
+                    "To", []
+                )
+                if len(to_entities) > 0:
+                    if recognizer_result.entities.get("To", [{"$instance": {}}])[0][
+                        "$instance"
+                    ]:
+                        result.destination = to_entities[0]["text"].capitalize()
+                    else:
+                        result.unsupported_airports.append(
+                            to_entities[0]["text"].capitalize()
+                        )
+
+                from_entities = recognizer_result.entities.get("$instance", {}).get(
+                    "From", []
+                )
+
+                # This value will be a TIMEX. And we are only interested in a Date so grab the first result and drop
+                # the Time part. TIMEX is a format that represents DateTime expressions that include some ambiguity.
+                # e.g. missing a Year.
+                date_entities = recognizer_result.entities.get("datetime", [])
+                if date_entities:
+                    timex = date_entities[0]["timex"]
+
+                    if timex:
+                        datetime = timex[0].split("T")[0]
+
+                        result.travel_date = datetime
+
+                else:
+                    result.travel_date = None
+
+                user_id_entities = recognizer_result.entities.get("User_ID", [])
+                if user_id_entities:
+                    user_id = user_id_entities[0]
+
+                    result.user_id = user_id
+
+                else:
+                    result.user_id = None
+
+                capacity_entities = recognizer_result.entities.get("Capacity", [])
+                if capacity_entities:
+                    capacity = capacity_entities[0]
+
+                    result.capacity = capacity
+
+                else:
+                    result.capacity = -1
 
         except Exception as exception:
             print(exception)

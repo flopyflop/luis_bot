@@ -15,6 +15,7 @@ from booking_details import BookingDetails
 from cancel_booking_details import CancelBookingDetails
 from dialogs import BookingDialog
 from dialogs.cancel_booking_dialog import CancelBookingDialog
+from dialogs.edit_booking_dialog import EditBookingDialog
 from flight_booking_recognizer import FlightBookingRecognizer
 from helpers.luis_helper import LuisHelper, Intent
 
@@ -22,16 +23,19 @@ from helpers.luis_helper import LuisHelper, Intent
 class MainDialog(ComponentDialog):
     def __init__(
         self, luis_recognizer: FlightBookingRecognizer, booking_dialog: BookingDialog,
-            cancel_booking_dialog: CancelBookingDialog
+            cancel_booking_dialog: CancelBookingDialog,
+            edit_booking_dialog: EditBookingDialog
     ):
         super(MainDialog, self).__init__(MainDialog.__name__)
 
         self._luis_recognizer = luis_recognizer
         self._booking_dialog_id = booking_dialog.id
+        self._edit_booking_dialog_id = edit_booking_dialog.id
         self._cancel_booking_dialog_id = cancel_booking_dialog.id
         self.add_dialog(TextPrompt(TextPrompt.__name__))
         self.add_dialog(booking_dialog)
         self.add_dialog(cancel_booking_dialog)
+        self.add_dialog(edit_booking_dialog)
         self.add_dialog(
             WaterfallDialog(
                 "WFDialog", [self.intro_step, self.act_step, self.final_step]
@@ -93,6 +97,16 @@ class MainDialog(ComponentDialog):
 
             # Run the BookingDialog giving it whatever details we have from the LUIS call.
             return await step_context.begin_dialog(self._cancel_booking_dialog_id, luis_result)
+
+        if intent == Intent.EDIT_BOOKING.value and luis_result:
+            # Show a warning for Origin and Destination if we can't resolve them.
+            await MainDialog._show_warning_for_unsupported_cities(
+                step_context.context, luis_result
+            )
+
+            # Run the BookingDialog giving it whatever details we have from the LUIS call.
+            return await step_context.begin_dialog(self._edit_booking_dialog_id, luis_result)
+
 
         if intent == Intent.GET_WEATHER.value:
             get_weather_text = "TODO: get weather flow here"

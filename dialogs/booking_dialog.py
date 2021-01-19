@@ -136,7 +136,8 @@ class BookingDialog(CancelAndHelpDialog):
 
         # Capture the results of the previous step
         booking_details.travel_date = step_context.result
-        if not booking_details.capacity <= 0:
+        if booking_details.capacity <= 0:
+            booking_details.capacity = None
             return await step_context.begin_dialog(
                 CapcacityResolverDialog.__name__, booking_details.capacity
             )

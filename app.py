@@ -27,6 +27,7 @@ from bots import DialogAndWelcomeBot
 
 from adapter_with_error_handler import AdapterWithErrorHandler
 from dialogs.cancel_booking_dialog import CancelBookingDialog
+from dialogs.edit_booking_dialog import EditBookingDialog
 from flight_booking_recognizer import FlightBookingRecognizer
 
 CONFIG = DefaultConfig()
@@ -48,7 +49,8 @@ ADAPTER = AdapterWithErrorHandler(SETTINGS, CONVERSATION_STATE)
 RECOGNIZER = FlightBookingRecognizer(CONFIG)
 BOOKING_DIALOG = BookingDialog()
 CANCEL_BOOKING_DIALOG = CancelBookingDialog()
-DIALOG = MainDialog(RECOGNIZER, BOOKING_DIALOG, CANCEL_BOOKING_DIALOG)
+EDIT_BOOKING_DIALOG = EditBookingDialog()
+DIALOG = MainDialog(RECOGNIZER, BOOKING_DIALOG, CANCEL_BOOKING_DIALOG, EDIT_BOOKING_DIALOG)
 BOT = DialogAndWelcomeBot(CONVERSATION_STATE, USER_STATE, DIALOG)
 
 
